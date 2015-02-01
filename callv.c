@@ -26,6 +26,13 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 int plugin_is_GPL_compatible;
 
+int max(int a, int b) {
+	if(a > b)
+		return a;
+	else
+		return b;
+}
+
 char *
 callv(const char *nm, int argc, char **argv)
 {
@@ -36,7 +43,7 @@ callv(const char *nm, int argc, char **argv)
 	
 	unsigned int len = strlen(code);
 	unsigned int *lens = malloc(sizeof(int) * argc);
-	for(int i = 1; i < argc; i++) {
+	for(int i = 0; i < argc; i++) {
 		lens[i] = strlen(argv[i]);
 	}
 	
@@ -45,33 +52,39 @@ callv(const char *nm, int argc, char **argv)
 	int pos = 0;
 	int newpos = 0;
 	
-	for(pos = 0; code[pos] != '\0'; pos++) {
+	for(pos = 0; pos <= len; pos++) {
+		int n = 0;
+		char *src;
 		if(code[pos] == '$' && code[pos+1] != '$') {
 			int i = code[pos+1] - '0';
-			if(i > 0 && i < argc) {
-				if (pos+lens[i] > newlen) {
-					newlen += 100;
-					realloc(str, newlen);
-				}
-				strcpy(str+newpos, argv[i]);
-				newpos += lens[i];
+			if(i >= 0 && i < argc) {
+				n = lens[i];
+				src = argv[i];
 				pos++;
 			} else if(i >= argc && i < 10) {
 				pos++;
 			} else {
-				str[newpos] = code[pos];
-				newpos++;
+				n = 1;
+				src = code + pos;
 			}
 		} else if(code[pos] == '$' && code[pos+1] == '$') {
-			strncpy(str+newpos, code+pos, 2);
-			pos += 1;
-			newpos += 2;
+			n = 2;
+			src = code + pos;
+			pos++;
 		} else {
-			str[newpos] = code[pos];
-			newpos++;
+			n = 1;
+			src = code + pos;
+		}
+		
+		if (n > 0) {
+			if (newpos + n > newlen) {
+				newlen += max(100, n);
+				realloc(str, newlen);
+			}
+			strncpy(str+newpos, src, n);
+			newpos += n;
 		}
 	}
-	str[newpos] = '\0';
 	
 	char *res = gmk_alloc(newlen);
 	strcpy(res, str);
