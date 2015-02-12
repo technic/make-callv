@@ -97,7 +97,7 @@ callv(const char *nm, int argc, char **argv)
 int
 callv_gmk_setup ()
 {
-	/* Register the function with make name "mk-temp".  */
+	/* Register the function with make name "callv".  */
 	gmk_add_function ("callv", callv, 1, 10, GMK_FUNC_DEFAULT);
 	return 1;
 }
